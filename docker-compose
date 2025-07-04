@@ -1,0 +1,70 @@
+services:
+  postiz:
+    image: ghcr.io/gitroomhq/postiz-app:latest
+    environment:
+      - SERVICE_FQDN_postiz_5000
+      - MAIN_URL=${SERVICE_FQDN_postiz}
+      - FRONTEND_URL=${SERVICE_FQDN_postiz}
+      - NEXT_PUBLIC_BACKEND_URL=${SERVICE_FQDN_postiz}/api
+      - JWT_SECRET=${SERVICE_PASSWORD_JWTSECRET}
+      - DATABASE_URL=postgresql://postgres:${SERVICE_PASSWORD_postgres}@postgres:5432/${POSTGRESQL_DATABASE:-postiz-db}
+      - REDIS_URL=redis://default:${SERVICE_PASSWORD_redis}@redis:6379
+      - BACKEND_INTERNAL_URL=http://localhost:3000
+      - IS_GENERAL=true
+    volumes:
+      - postiz_config:/config/
+      - postiz_uploads:/uploads/
+    labels:
+      - "traefik.enable=true"
+      # Explicitly define a router for API traffic on the /api path
+      - "traefik.http.routers.postiz-api.rule=Host(`${SERVICE_FQDN_postiz}`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.postiz-api.service=postiz-svc"
+      # Define a router for all other traffic
+      - "traefik.http.routers.postiz-app.rule=Host(`${SERVICE_FQDN_postiz}`)"
+      - "traefik.http.routers.postiz-app.service=postiz-svc"
+      # Define the service that both routers will use
+      - "traefik.http.services.postiz-svc.loadbalancer.server.port=5000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - wget -qO- http://127.0.0.1:5000/
+      interval: 5s
+      timeout: 20s
+      retries: 10
+
+  postgres:
+    image: postgres:14.5
+    volumes:
+      - postiz_postgresql_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=${SERVICE_PASSWORD_postgres}
+      - POSTGRES_DB=${POSTGRESQL_DATABASE:-postiz-db}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB:-postiz-db}"]
+      interval: 5s
+      timeout: 20s
+      retries: 10
+
+  redis:
+    image: redis:7.2
+    environment:
+      - REDIS_PASSWORD=${SERVICE_PASSWORD_redis}
+    command: redis-server --requirepass ${SERVICE_PASSWORD_redis}
+    volumes:
+      - postiz_redis_data:/data
+    healthcheck:
+      test:
+        - CMD
+        - redis-cli
+        - -a
+        - ${SERVICE_PASSWORD_redis}
+        - ping
+      interval: 5s
+      timeout: 10s
+      retries: 20
