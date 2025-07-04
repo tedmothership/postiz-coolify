@@ -10,19 +10,84 @@ services:
       - DATABASE_URL=postgresql://postgres:${SERVICE_PASSWORD_postgres}@postgres:5432/${POSTGRESQL_DATABASE:-postiz-db}
       - REDIS_URL=redis://default:${SERVICE_PASSWORD_redis}@redis:6379
       - BACKEND_INTERNAL_URL=http://localhost:3000
+      
+      # Cloudflare R2 Settings
+      - CLOUDFLARE_ACCOUNT_ID=${CLOUDFLARE_ACCOUNT_ID}
+      - CLOUDFLARE_ACCESS_KEY=${CLOUDFLARE_ACCESS_KEY}
+      - CLOUDFLARE_SECRET_ACCESS_KEY=${CLOUDFLARE_SECRET_ACCESS_KEY}
+      - CLOUDFLARE_BUCKETNAME=${CLOUDFLARE_BUCKETNAME}
+      - CLOUDFLARE_BUCKET_URL=${CLOUDFLARE_BUCKET_URL}
+      - CLOUDFLARE_REGION=${CLOUDFLARE_REGION}
+      
+      # Storage Settings
+      - STORAGE_PROVIDER=${STORAGE_PROVIDER:-local}
+      - UPLOAD_DIRECTORY=${UPLOAD_DIRECTORY:-/uploads}
+      - NEXT_PUBLIC_UPLOAD_DIRECTORY=${NEXT_PUBLIC_UPLOAD_DIRECTORY:-/uploads}
+      - NEXT_PUBLIC_UPLOAD_STATIC_DIRECTORY=${NEXT_PUBLIC_UPLOAD_STATIC_DIRECTORY}
+      
+      # Email Settings
+      - RESEND_API_KEY=${RESEND_API_KEY}
+      - EMAIL_FROM_ADDRESS=${EMAIL_FROM_ADDRESS}
+      - EMAIL_FROM_NAME=${EMAIL_FROM_NAME}
+      - EMAIL_PROVIDER=${EMAIL_PROVIDER}
+      
+      # Social Media API Settings
+      - X_API_KEY=${SERVICE_X_API}
+      - X_API_SECRET=${SERVICE_X_SECRET}
+      - LINKEDIN_CLIENT_ID=${SERVICE_LINKEDIN_ID}
+      - LINKEDIN_CLIENT_SECRET=${SERVICE_LINKEDIN_SECRET}
+      - REDDIT_CLIENT_ID=${SERVICE_REDDIT_API}
+      - REDDIT_CLIENT_SECRET=${SERVICE_REDDIT_SECRET}
+      - GITHUB_CLIENT_ID=${SERVICE_GITHUB_ID}
+      - GITHUB_CLIENT_SECRET=${SERVICE_GITHUB_SECRET}
+      - THREADS_APP_ID=${SERVICE_THREADS_ID}
+      - THREADS_APP_SECRET=${SERVICE_THREADS_SECRET}
+      - FACEBOOK_APP_ID=${SERVICE_FACEBOOK_ID}
+      - FACEBOOK_APP_SECRET=${SERVICE_FACEBOOK_SECRET}
+      - YOUTUBE_CLIENT_ID=${SERVICE_YOUTUBE_ID}
+      - YOUTUBE_CLIENT_SECRET=${SERVICE_YOUTUBE_SECRET}
+      - TIKTOK_CLIENT_ID=${SERVICE_TIKTOK_ID}
+      - TIKTOK_CLIENT_SECRET=${SERVICE_TIKTOK_SECRET}
+      - PINTEREST_CLIENT_ID=${SERVICE_PINTEREST_ID}
+      - PINTEREST_CLIENT_SECRET=${SERVICE_PINTEREST_SECRET}
+      - DRIBBBLE_CLIENT_ID=${SERVICE_DRIBBLE_ID}
+      - DRIBBBLE_CLIENT_SECRET=${SERVICE_DRIBBLE_SECRET}
+      - DISCORD_CLIENT_ID=${SERVICE_DISCORD_ID}
+      - DISCORD_CLIENT_SECRET=${SERVICE_DISCORD_SECRET}
+      - DISCORD_BOT_TOKEN_ID=${SERVICE_DISCORD_TOKEN}
+      - SLACK_ID=${SERVICE_SLACK_ID}
+      - SLACK_SECRET=${SERVICE_SLACK_SECRET}
+      - SLACK_SIGNING_SECRET=${SLACK_SIGNING_SECRET}
+      - MASTODON_CLIENT_ID=${SERVICE_MASTODON_ID}
+      - MASTODON_CLIENT_SECRET=${SERVICE_MASTODON_SECRET}
+      
+      # Integration APIs
+      - BEEHIIVE_API_KEY=${SERVICE_BEEHIIVE_KEY}
+      - BEEHIIVE_PUBLICATION_ID=${SERVICE_BEEHIIVE_PUBID}
+      - OPENAI_API_KEY=${SERVICE_OPENAI_KEY}
+      
+      # Misc Settings
+      - NEXT_PUBLIC_DISCORD_SUPPORT=${NEXT_PUBLIC_DISCORD_SUPPORT}
+      - NEXT_PUBLIC_POLOTNO=${NEXT_PUBLIC_POLOTNO}
       - IS_GENERAL=true
+      - NX_ADD_PLUGINS=${NX_ADD_PLUGINS:-false}
+      
+      # Payment Settings
+      - FEE_AMOUNT=${FEE_AMOUNT:-0.05}
+      - STRIPE_PUBLISHABLE_KEY=${STRIPE_PUBLISHABLE_KEY}
+      - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
+      - STRIPE_SIGNING_KEY=${STRIPE_SIGNING_KEY}
+      - STRIPE_SIGNING_KEY_CONNECT=${STRIPE_SIGNING_KEY_CONNECT}
+
     volumes:
       - postiz_config:/config/
       - postiz_uploads:/uploads/
     labels:
       - "traefik.enable=true"
-      # Explicitly define a router for API traffic on the /api path
       - "traefik.http.routers.postiz-api.rule=Host(`${SERVICE_FQDN_postiz}`) && PathPrefix(`/api`)"
       - "traefik.http.routers.postiz-api.service=postiz-svc"
-      # Define a router for all other traffic
       - "traefik.http.routers.postiz-app.rule=Host(`${SERVICE_FQDN_postiz}`)"
       - "traefik.http.routers.postiz-app.service=postiz-svc"
-      # Define the service that both routers will use
       - "traefik.http.services.postiz-svc.loadbalancer.server.port=5000"
     depends_on:
       postgres:
