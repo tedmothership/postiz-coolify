@@ -10,6 +10,9 @@ services:
       - DATABASE_URL=postgresql://postgres:${SERVICE_PASSWORD_postgres}@postgres:5432/${POSTGRESQL_DATABASE:-postiz-db}
       - REDIS_URL=redis://default:${SERVICE_PASSWORD_redis}@redis:6379
       - BACKEND_INTERNAL_URL=http://localhost:3000
+      - 'GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}'
+      - 'GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}'
+      
       
       # Cloudflare R2 Settings
       - CLOUDFLARE_ACCOUNT_ID=${CLOUDFLARE_ACCOUNT_ID}
